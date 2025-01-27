@@ -77,10 +77,10 @@ pub fn make_array_with_length(
     length: usize,
     vm: &VirtualMachine,
 ) -> PyResult<PyRef<PyCArray>> {
-    let outer_type = cls.get_attr("_type_").ok_or_else(|| {
+    let outer_type = cls.get_attr(vm.ctx.intern_str("_type_")).ok_or_else(|| {
         vm.new_attribute_error("class must define a '_type_' attribute".to_string())
     })?;
-    let _type_ = outer_type.get_attr("_type_", vm)
+    let _type_ = outer_type.get_attr(vm.ctx.intern_str("_type_"), vm)
         .map_err(|_| vm.new_type_error("_type_ must have storage info".to_string()))?;
     let itemsize = get_size(_type_.downcast::<PyStr>().unwrap().to_string().as_str());
     let capacity = length
@@ -148,7 +148,7 @@ fn array_get_slice_params(
     vm: &VirtualMachine,
 ) -> PyResult<(isize, isize, isize)> {
     if let Some(ref len) = length {
-        let indices = vm.get_method(slice.to_pyobject(vm), "indices").unwrap()?;
+        let indices = vm.get_method(slice.to_pyobject(vm), vm.ctx.intern_str("indices")).unwrap()?;
         let tuple = vm.invoke(&indices, (len.clone(),))?;
 
         let (start, stop, step) = (
@@ -190,10 +190,10 @@ fn array_slice_getitem<'a>(
     size: usize,
     vm: &'a VirtualMachine,
 ) -> PyResult {
-    let length = zelf.get_attr("_length_", &vm)
+    let length = zelf.get_attr(vm.ctx.intern_str("_length_"), &vm)
         .map(|c_l| usize::try_from_object(vm, c_l))??;
 
-    let tp = zelf.get_attr("_type_", vm)?.downcast::<PyStr>().unwrap().to_string();
+    let tp = zelf.get_attr(vm.ctx.intern_str("_type_"), vm)?.downcast::<PyStr>().unwrap().to_string();
     let _type_ = tp.as_str();
     let (step, start, stop) = array_get_slice_params(slice, &Some(vm.ctx.new_int(length).to_pyobject(&vm)), vm)?;
 
@@ -350,12 +350,12 @@ impl PyCDataMethods for PyCArrayMeta {
             return Ok(value);
         }
 
-        let length = zelf.as_object().get_attr("_length_", &vm)
+        let length = zelf.as_object().get_attr(vm.ctx.intern_str("_length_"), &vm)
             .map(|c_l| usize::try_from_object(vm, c_l))??;
 
         let value_len = value.length(vm)?;
 
-        if let Ok(tp) = zelf.as_object().get_attr("_type_", vm) {
+        if let Ok(tp) = zelf.as_object().get_attr(vm.ctx.intern_str("_type_"), vm) {
             let _type = tp.downcast::<PyCSimple>().unwrap();
 
             if _type._type_.as_str() == "c" {
@@ -400,7 +400,7 @@ impl PyCDataMethods for PyCArrayMeta {
 impl PyCArrayMeta {
     #[pyslot]
     fn slot_new(cls: PyTypeRef, vm: &VirtualMachine) -> PyResult {
-        let length_obj = cls.as_object().get_attr("_length_", &vm)
+        let length_obj = cls.as_object().get_attr(vm.ctx.intern_str("_length_"), &vm)
             .map_err(|_| {
                 vm.new_attribute_error("class must define a '_length_' attribute".to_string())
             })?;
