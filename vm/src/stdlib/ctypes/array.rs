@@ -364,7 +364,7 @@ impl PyCDataMethods for PyCArrayMeta {
                     if value_len > length {
                         return Err(vm.new_value_error("Invalid length".to_string()));
                     }
-                    value = make_array_with_length(cls.clone().into_ref(&vm.ctx), length, vm)?.as_object().clone();
+                    value = make_array_with_length(cls.clone().into_ref(&vm.ctx), length, vm)?.to_pyobject(vm);
                 } else if value.is_instance(cls.clone().into_ref(&vm.ctx).as_ref(), vm).is_err() {
                     return Err(
                         vm.new_type_error(format!("expected bytes, {} found", value.class().name()))
@@ -375,7 +375,7 @@ impl PyCDataMethods for PyCArrayMeta {
                     if value_len > length {
                         return Err(vm.new_value_error("Invalid length".to_string()));
                     }
-                    value = make_array_with_length(cls.clone(), length, vm)?.as_object().clone();
+                    value = make_array_with_length(cls.to_owned(), length, vm)?.to_pyobject(vm);
                 } else if value.is_instance(cls.as_ref(), vm).is_err() {
                     return Err(vm.new_type_error(format!(
                         "expected unicode string, {} found",
@@ -389,7 +389,7 @@ impl PyCDataMethods for PyCArrayMeta {
             if value_len > length {
                 return Err(vm.new_runtime_error("Invalid length".to_string()));
             }
-            value = make_array_with_length(cls, length, vm)?.as_object().clone();
+            value = make_array_with_length(cls.to_owned(), length, vm)?.as_object().clone();
         }
 
         default_from_param(zelf, value, vm)
