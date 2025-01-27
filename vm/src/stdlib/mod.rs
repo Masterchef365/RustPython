@@ -105,12 +105,9 @@ pub fn get_module_inits() -> StdlibMap {
         {
             "symtable" => symtable::make_module,
         }
-        #[cfg(any(unix, windows))]
+        #[cfg(all(any(unix, windows), feature = "ctypes"))]
         {
-            #[cfg(feature = "ctypes")]
-            {
-                "_ctypes" => ctypes::make_module,
-            }
+            "_ctypes" => ctypes::make_module,
         }
         #[cfg(any(unix, target_os = "wasi"))]
         {
