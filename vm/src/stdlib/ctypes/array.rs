@@ -389,7 +389,7 @@ impl PyCDataMethods for PyCArrayMeta {
             if value_len > length {
                 return Err(vm.new_runtime_error("Invalid length".to_string()));
             }
-            value = make_array_with_length(cls.to_owned(), length, vm)?.to_pyobject();
+            value = make_array_with_length(cls.to_owned(), length, vm)?.to_pyobject(vm);
         }
 
         default_from_param(zelf, value, vm)
@@ -417,7 +417,7 @@ impl PyCArrayMeta {
             )
         }?;
 
-        Ok(make_array_with_length(cls, length, vm)?.to_pyobject())
+        Ok(make_array_with_length(cls, length, vm)?.to_pyobject(vm))
     }
 }
 
@@ -441,7 +441,7 @@ impl PyCArray {
                         stop: vm.new_pyobj(zelf._length_),
                         step: None,
                     }
-                        .into_ref(&vm.ctx),
+                    .to_saturated(vm)?
                 );
 
                 Self::setitem(zelf, py_slice, value, vm)
@@ -620,7 +620,7 @@ impl PyCArray {
                 slice_to_obj(zelf._type_._type_.as_str(), buffer_slice, vm)
             }
             SequenceIndex::Slice(slice) => array_slice_getitem(
-                zelf.to_pyobject(),
+                zelf.to_pyobject(vm),
                 &buffer_bytes[..],
                 slice,
                 size,
@@ -647,10 +647,10 @@ impl PyCArray {
                 let idx = fix_index(idx, zelf._length_, vm)? as usize;
                 let offset = idx * size;
                 let buffer_slice = &mut buffer_bytes[offset..offset + size];
-                set_array_value(&zelf.to_pyobject(), buffer_slice, idx, size, obj, vm)
+                set_array_value(&zelf.to_pyobject(vm), buffer_slice, idx, size, obj, vm)
             }
             SequenceIndex::Slice(slice) => array_slice_setitem(
-                zelf.to_pyobject(),
+                zelf.to_pyobject(vm),
                 slice,
                 &mut buffer_bytes[..],
                 obj,
