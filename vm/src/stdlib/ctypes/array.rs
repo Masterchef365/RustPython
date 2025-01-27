@@ -206,7 +206,7 @@ fn array_slice_getitem<'a>(
     let mut obj_vec = Vec::new();
     let mut offset;
 
-    for curr in PyIter::try_from_object(vm,_range.into_object(vm))?.iter(vm)? {
+    for curr in PyIter::try_from_object(vm,_range.to_pyobject(vm))?.iter(vm)? {
         let idx = fix_index(isize::try_from_object(vm, curr?)?, length, vm)? as usize;
         offset = idx * size;
 
@@ -253,7 +253,7 @@ fn array_slice_setitem(
     //Right now I'm setting one
     let size = length.map_or(Ok(1), |v| usize::try_from_object(vm, v))?;
 
-    for (i, curr) in PyIter::try_from_object(vm,_range.into_object(vm))?.iter(vm)?.enumerate() {
+    for (i, curr) in PyIter::try_from_object(vm,_range.to_pyobject(vm))?.iter(vm)?.enumerate() {
         let idx = fix_index(isize::try_from_object(vm, curr?)?, size, vm)? as usize;
         let offset = idx * size;
         let item = obj.get_item(&i, vm)?;
