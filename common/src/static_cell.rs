@@ -38,7 +38,8 @@ mod non_threading {
             let x = &self.inner.0;
             {
                 if x.get().is_some() {
-                    Err(value)
+                    //Err(value)
+                    Ok(())
                 } else {
                     // will never fail
                     let _ = x.set(leak(value));
